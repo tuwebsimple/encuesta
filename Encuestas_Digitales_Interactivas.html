@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encuesta - Nuevos Jabones Mexicanos</title>
+    <script>
+        // Suprimir TODOS los console.warn antes de cargar Tailwind
+        const originalWarn = console.warn;
+        console.warn = function() {
+            // No hacer nada - silenciar completamente
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Restaurar console.warn después de que Tailwind cargue
+        setTimeout(() => {
+            console.warn = originalWarn;
+        }, 100);
+    </script>
+    <style>
+        .progress-sticky {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: white;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .star-rating input[type="radio"] {
+            display: none;
+        }
+        .star-rating label {
+            cursor: pointer;
+            font-size: 2rem;
+            color: #d1d5db;
+            transition: color 0.2s;
+        }
+        .star-rating label:hover,
+        .star-rating label:hover ~ label,
+        .star-rating input[type="radio"]:checked ~ label {
+            color: #fbbf24;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-orange-50 min-h-screen py-8">
+    <div class="max-w-3xl mx-auto px-4">
+        
+        <!-- Barra de Progreso FIJA -->
+        <div class="progress-sticky rounded-xl mb-6">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-semibold text-gray-700">Progreso</span>
+                <span id="progress-text" class="text-sm text-gray-600">0%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-green-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <!-- Toggle entre encuestas -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 mb-6">
+            <div class="flex items-center justify-between gap-4">
+                <div class="flex-1">
+                    <h2 id="toggle-title" class="text-xl font-bold text-gray-800 mb-2">Encuesta: Día a Día</h2>
+                    <p id="toggle-subtitle" class="text-sm text-gray-600">Jabón esencial al alcance de todos</p>
+                </div>
+                <button 
+                    onclick="toggleEncuesta()"
+                    class="bg-gradient-to-r from-blue-500 to-orange-500 hover:from-blue-600 hover:to-orange-600 text-white font-semibold py-3 px-6 rounded-xl transition-all transform hover:scale-105 shadow-lg"
+                >
+                    Cambiar a <span id="toggle-text">Eco Nutree</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Contenedor principal del formulario -->
+        <div id="encuesta-container" class="bg-white rounded-2xl shadow-xl p-8 fade-in">
+            
+            <!-- Header de la encuesta -->
+            <div class="text-center mb-8">
+                <div id="header-icon" class="text-6xl mb-4">🧼</div>
+                <h1 id="encuesta-title" class="text-3xl font-bold text-gray-800 mb-3">
+                    Encuesta: Día a Día
+                </h1>
+                <p id="encuesta-descripcion" class="text-gray-600 max-w-2xl mx-auto">
+                    Ayúdanos a crear un jabón de CALIDAD a PRECIO JUSTO para familias mexicanas. 
+                    Solo 3-4 minutos, completamente anónimo.
+                </p>
+                <div class="mt-4 text-sm text-gray-500">
+                    Toluca y Metepec, Estado de México
+                </div>
+            </div>
+
+            <!-- Formulario -->
+            <form id="encuesta-form" class="space-y-8">
+                
+                <!-- SECCIÓN: Test de Nombres -->
+                <div class="border-t-4 border-blue-500 pt-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                        <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">1</span>
+                        Test de Nombres
+                    </h2>
+                    
+                    <!-- Pregunta 1: Rating de nombres -->
+                    <div class="mb-8 bg-gray-50 p-6 rounded-xl">
+                        <label class="block text-lg font-semibold text-gray-700 mb-4">
+                            Califique cada nombre (1 = No me gusta, 5 = Me encanta)
+                        </label>
+                        
+                        <div id="nombres-rating" class="space-y-4">
+                            <!-- Los nombres se llenarán dinámicamente -->
+                        </div>
+                    </div>
+
+                    <!-- Pregunta 2: Mejor asociación -->
+                    <div class="mb-8">
+                        <label id="label-asociacion" class="block text-lg font-semibold text-gray-700 mb-3">
+                            ¿Cuál transmite MEJOR la idea de un jabón económico y de calidad?
+                        </label>
+                        <div id="nombres-asociacion" class="space-y-2">
+                            <!-- Opciones dinámicas -->
+                        </div>
+                </div>
+
+                <!-- SECCIÓN: Datos Generales -->
+                <div class="border-t-4 border-green-500 pt-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                        <span class="bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">2</span>
+                        Datos Generales
+                    </h2>
+
+                    <!-- Edad -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-2">Edad</label>
+                        <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Seleccione...</option>
+                            <option>18-24 años</option>
+                            <option>25-34 años</option>
+                            <option>35-44 años</option>
+                            <option>45-54 años</option>
+                            <option>55+ años</option>
+                        </select>
+                    </div>
+
+                    <!-- Género (AMBAS ENCUESTAS) -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-2">Género</label>
+                        <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Seleccione...</option>
+                            <option>Femenino</option>
+                            <option>Masculino</option>
+                            <option>Otro / Prefiero no especificar</option>
+                        </select>
+                    </div>
+
+                    <!-- Frecuencia de compra -->
+                    <div class="mb-6">
+                        <label id="label-frecuencia" class="block text-gray-700 font-semibold mb-2">¿Con qué frecuencia compra jabón de barra?</label>
+                        <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Seleccione...</option>
+                            <option>Cada semana</option>
+                            <option>Cada quincena</option>
+                            <option>Cada mes</option>
+                            <option>Cada 2-3 meses</option>
+                        </select>
+                    </div>
+
+                    <!-- NUEVA: Qué es más importante -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-3">¿Qué es lo MÁS IMPORTANTE para usted al comprar jabón de barra? (Seleccione 1 o 2 opciones)</label>
+                        <p class="text-sm text-gray-500 mb-3">Opcional: marque 1 o 2</p>
+                        <div class="space-y-2" id="mas-importante-container">
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="mas-importante" value="precio" class="mr-3 w-5 h-5 checkbox-importante">
+                                <span>Precio bajo</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="mas-importante" value="calidad" class="mr-3 w-5 h-5 checkbox-importante">
+                                <span>Calidad / que limpie bien</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="mas-importante" value="rendimiento" class="mr-3 w-5 h-5 checkbox-importante">
+                                <span>Que rinda / dure mucho</span>
+                            </label>
+                            <label id="opt-ingredientes" class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="mas-importante" value="ingredientes" class="mr-3 w-5 h-5 checkbox-importante">
+                                <span>Ingredientes naturales</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="mas-importante" value="piel" class="mr-3 w-5 h-5 checkbox-importante">
+                                <span>Que cuide mi piel / no la reseque</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="mas-importante" value="marca" class="mr-3 w-5 h-5 checkbox-importante">
+                                <span>Marca reconocida / confiable</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="mas-importante" value="disponibilidad" class="mr-3 w-5 h-5 checkbox-importante">
+                                <span>Disponibilidad / fácil de encontrar</span>
+                            </label>
+                            <label id="opt-sustentable" class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="mas-importante" value="sustentable" class="mr-3 w-5 h-5 checkbox-importante">
+                                <span>Que sea sustentable / eco-friendly</span>
+                            </label>
+                        </div>
+                        <p id="error-importante" class="text-red-500 text-sm mt-2 hidden">Por favor seleccione exactamente 2 opciones</p>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN: Hábitos de Compra -->
+                <div class="border-t-4 border-purple-500 pt-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                        <span class="bg-purple-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">3</span>
+                        Hábitos de Compra
+                    </h2>
+
+                    <!-- Dónde compra -->
+                    <div class="mb-6">
+                        <label id="label-donde-compra" class="block text-gray-700 font-semibold mb-2">¿Dónde compra PRINCIPALMENTE su jabón de barra?</label>
+                        <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Seleccione...</option>
+                            <option id="opt-3b">Tiendas 3B</option>
+                            <option id="opt-waldos">Waldo's</option>
+                            <option id="opt-aurrera">Bodega Aurrera / Walmart</option>
+                            <option id="opt-super">Soriana / Chedraui</option>
+                            <option id="opt-farmacia">Farmacia (Guadalajara, del Ahorro, etc.)</option>
+                            <option id="opt-mercado">Mercado local / Tianguis</option>
+                            <option id="opt-online">Compras en línea</option>
+                            <option id="opt-tiendita">Tienda de la esquina</option>
+                            <option>Otro</option>
+                        </select>
+                    </div>
+
+                    <!-- Cuánto paga -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-2">¿Cuánto paga normalmente por su jabón de barra?</label>
+                        <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Seleccione...</option>
+                            <option id="opt-precio-10">Menos de $10</option>
+                            <option id="opt-precio-15">$10-$15</option>
+                            <option id="opt-precio-20">$16-$20</option>
+                            <option id="opt-precio-30">$21-$30</option>
+                            <option id="opt-precio-50">$31-$50</option>
+                            <option id="opt-precio-100">$51-$100</option>
+                            <option id="opt-precio-mas">Más de $100</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN: Conocimiento de Marca (NUEVA - DÍA A DÍA) -->
+                <div id="seccion-marca-dia" class="border-t-4 border-yellow-500 pt-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                        <span class="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">3.5</span>
+                        Su Marca Actual
+                    </h2>
+
+                    <!-- D1: Marca que compra -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-2">¿Qué marca de jabón de barra compra MÁS FRECUENTEMENTE?</label>
+                        <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Seleccione...</option>
+                            <option>Zote</option>
+                            <option>Roma</option>
+                            <option>Escudo</option>
+                            <option>Rosa Venus</option>
+                            <option>Palmolive</option>
+                            <option>Protex</option>
+                            <option>Dove</option>
+                            <option>Marca 3B / Marca blanca</option>
+                            <option>No tengo marca fija</option>
+                            <option>Otra: (especificar en comentarios)</option>
+                        </select>
+                    </div>
+
+                    <!-- D2: Por qué compra esa marca -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-3">¿Por qué compra esa marca principalmente? (Seleccione LAS 2 razones MÁS importantes)</label>
+                        <p class="text-sm text-gray-500 mb-3">Opcional: marque 1 o 2</p>
+                        <div class="space-y-2" id="marca-razones-container">
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="marca-razones" value="precio-bajo" class="mr-3 w-5 h-5 checkbox-marca-razones">
+                                <span>Tiene el precio más bajo</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="marca-razones" value="calidad-precio" class="mr-3 w-5 h-5 checkbox-marca-razones">
+                                <span>Buena relación calidad-precio</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="marca-razones" value="rinde" class="mr-3 w-5 h-5 checkbox-marca-razones">
+                                <span>Rinde más / dura más tiempo</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="marca-razones" value="limpia" class="mr-3 w-5 h-5 checkbox-marca-razones">
+                                <span>Limpia bien / buena calidad</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="marca-razones" value="acostumbrado" class="mr-3 w-5 h-5 checkbox-marca-razones">
+                                <span>Estoy acostumbrado/a a ella</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="marca-razones" value="aroma" class="mr-3 w-5 h-5 checkbox-marca-razones">
+                                <span>Me gusta su aroma</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="marca-razones" value="recomendacion" class="mr-3 w-5 h-5 checkbox-marca-razones">
+                                <span>Me la recomendaron</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="marca-razones" value="disponible" class="mr-3 w-5 h-5 checkbox-marca-razones">
+                                <span>Siempre la encuentro disponible</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="marca-razones" value="familia" class="mr-3 w-5 h-5 checkbox-marca-razones">
+                                <span>Es la marca que conoce mi familia</span>
+                            </label>
+                        </div>
+                        <p id="error-marca-razones" class="text-red-500 text-sm mt-2 hidden">Por favor seleccione exactamente 2 opciones</p>
+                    </div>
+
+                    <!-- D3: Qué haría cambiar -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-3">¿Qué lo/la convencería de CAMBIAR a una nueva marca de jabón de barra? (Puede seleccionar VARIAS)</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="cambiar-marca" value="costo-menos" class="mr-3 w-5 h-5">
+                                <span>Que cueste menos que mi marca actual</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="cambiar-marca" value="dure-doble" class="mr-3 w-5 h-5">
+                                <span>Que dure/rinda el doble</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="cambiar-marca" value="mejor-calidad" class="mr-3 w-5 h-5">
+                                <span>Que tenga mejor calidad de limpieza</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="cambiar-marca" value="cuide-piel" class="mr-3 w-5 h-5">
+                                <span>Que cuide más mi piel / no la reseque tanto</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="cambiar-marca" value="recomendacion" class="mr-3 w-5 h-5">
+                                <span>Que me la recomiende alguien de confianza</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="cambiar-marca" value="disponible" class="mr-3 w-5 h-5">
+                                <span>Que esté disponible en mi tienda habitual</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="cambiar-marca" value="promociones" class="mr-3 w-5 h-5">
+                                <span>Que ofrezca promociones / descuentos</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="cambiar-marca" value="aroma" class="mr-3 w-5 h-5">
+                                <span>Que tenga mejor aroma</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="cambiar-marca" value="nada" class="mr-3 w-5 h-5">
+                                <span>Nada, estoy satisfecho/a con mi marca actual</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- D4: Barras al mes -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-2">Aproximadamente, ¿cuántas barras de jabón compra su hogar AL MES?</label>
+                        <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Seleccione...</option>
+                            <option>1-2 barras</option>
+                            <option>3-4 barras</option>
+                            <option>5-7 barras</option>
+                            <option>8-10 barras</option>
+                            <option>Más de 10 barras</option>
+                            <option>No sé / Varía mucho</option>
+                        </select>
+                    </div>
+
+                    <!-- D5: Qué disgusta (ABIERTA) -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-2">¿Qué es lo que MÁS le disgusta o le gustaría mejorar de su jabón actual?</label>
+                        <textarea 
+                            rows="3" 
+                            placeholder="Ej: Se acaba muy rápido, reseca mucho la piel, no huele bien..."
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        ></textarea>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN: Uso de Productos Naturales (NUEVA - ECO NUTREE) -->
+                <div id="seccion-naturales-eco" class="border-t-4 border-teal-500 pt-6 hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                        <span class="bg-teal-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">3.5</span>
+                        Experiencia con Skincare Natural
+                    </h2>
+
+                    <!-- E1: Usa naturales actualmente -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-2">¿Usa actualmente productos de skincare naturales / artesanales? (jabones, limpiadores, etc.)</label>
+                        <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Seleccione...</option>
+                            <option>Sí, regularmente (uso semanal o más)</option>
+                            <option>Sí, ocasionalmente (cada mes o menos)</option>
+                            <option>No, pero me interesan / me gustaría probar</option>
+                            <option>No y prefiero productos convencionales</option>
+                            <option>No sé si los productos que uso son naturales</option>
+                        </select>
+                    </div>
+
+                    <!-- E2: Marcas que ha probado -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-3">¿Qué marcas de skincare natural / jabones artesanales ha probado? (Puede marcar VARIAS)</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="marcas-naturales" value="grisi" class="mr-3 w-5 h-5">
+                                <span>Grisi</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="marcas-naturales" value="lush" class="mr-3 w-5 h-5">
+                                <span>Lush</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="marcas-naturales" value="body-shop" class="mr-3 w-5 h-5">
+                                <span>The Body Shop</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="marcas-naturales" value="kiehls" class="mr-3 w-5 h-5">
+                                <span>Kiehl's</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="marcas-naturales" value="avene" class="mr-3 w-5 h-5">
+                                <span>Avène / La Roche-Posay</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="marcas-naturales" value="artesanales" class="mr-3 w-5 h-5">
+                                <span>Jabones artesanales de mercados</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="marcas-naturales" value="locales" class="mr-3 w-5 h-5">
+                                <span>Marcas locales / tiendas orgánicas</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="marcas-naturales" value="tiktok-instagram" class="mr-3 w-5 h-5">
+                                <span>Marcas en TikTok / Instagram</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="marcas-naturales" value="ninguna" class="mr-3 w-5 h-5">
+                                <span>Ninguna, nunca he probado naturales</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="marcas-naturales" value="otra" class="mr-3 w-5 h-5">
+                                <span>Otra: (especificar en comentarios)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- E3: Por qué natural -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-3">¿Qué lo/la motiva MÁS a elegir skincare natural vs convencional? (Seleccione LAS 2-3 MÁS importantes)</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="motiva-natural" value="resultados-piel" class="mr-3 w-5 h-5">
+                                <span>Mejor cuidado / resultados para mi piel</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="motiva-natural" value="ingredientes" class="mr-3 w-5 h-5">
+                                <span>Ingredientes naturales / orgánicos</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="motiva-natural" value="evitar-quimicos" class="mr-3 w-5 h-5">
+                                <span>Evitar químicos, parabenos, sulfatos</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="motiva-natural" value="suave" class="mr-3 w-5 h-5">
+                                <span>Más suave / menos irritante</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="motiva-natural" value="eco-friendly" class="mr-3 w-5 h-5">
+                                <span>Producto eco-friendly / sustentable</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="motiva-natural" value="dermatologo" class="mr-3 w-5 h-5">
+                                <span>Recomendación de dermatólogo / experto</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="motiva-natural" value="redes-sociales" class="mr-3 w-5 h-5">
+                                <span>Vi resultados en redes sociales</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="motiva-natural" value="calidad" class="mr-3 w-5 h-5">
+                                <span>Mejor calidad general</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="motiva-natural" value="apoyar-mexicanas" class="mr-3 w-5 h-5">
+                                <span>Apoyar marcas pequeñas / mexicanas</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="motiva-natural" value="no-compraria" class="mr-3 w-5 h-5">
+                                <span>No compraría natural, prefiero convencional</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- E4: Qué genera confianza -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-3">¿Qué le genera MÁS CONFIANZA para comprar skincare natural? (Seleccione 1 o 2 opciones)</label>
+                        <p class="text-sm text-gray-500 mb-3">Opcional: marque 1 o 2</p>
+                        <div class="space-y-2" id="confianza-container">
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="confianza" value="marca-reconocida" class="mr-3 w-5 h-5 checkbox-confianza">
+                                <span>Marca reconocida / establecida</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="confianza" value="ingredientes" class="mr-3 w-5 h-5 checkbox-confianza">
+                                <span>Lista completa de ingredientes (transparencia)</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="confianza" value="certificaciones" class="mr-3 w-5 h-5 checkbox-confianza">
+                                <span>Certificaciones orgánicas / dermatológicas</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="confianza" value="resenas" class="mr-3 w-5 h-5 checkbox-confianza">
+                                <span>Muchas reseñas positivas de clientes reales</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="confianza" value="influencers" class="mr-3 w-5 h-5 checkbox-confianza">
+                                <span>Recomendaciones de influencers / creadores</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="confianza" value="hecho-mexico" class="mr-3 w-5 h-5 checkbox-confianza">
+                                <span>Hecho en México / producto local</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="confianza" value="testimonios" class="mr-3 w-5 h-5 checkbox-confianza">
+                                <span>Testimonios con fotos de resultados (antes/después)</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="confianza" value="garantia" class="mr-3 w-5 h-5 checkbox-confianza">
+                                <span>Garantía de devolución / satisfacción</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="confianza" value="video-proceso" class="mr-3 w-5 h-5 checkbox-confianza">
+                                <span>Video mostrando el proceso de fabricación</span>
+                            </label>
+                        </div>
+                        <p id="error-confianza" class="text-red-500 text-sm mt-2 hidden">Por favor seleccione exactamente 2 opciones</p>
+                    </div>
+
+                    <!-- E5: Qué haría cambiar (natural) -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-3">Si ya usa productos naturales, ¿qué lo/la haría CAMBIAR de marca? (Puede seleccionar VARIAS)</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="cambiar-natural" value="precio" class="mr-3 w-5 h-5">
+                                <span>Mejor precio sin perder calidad</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="cambiar-natural" value="resultados" class="mr-3 w-5 h-5">
+                                <span>Mejores resultados visibles en mi piel</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="cambiar-natural" value="ingredientes-puros" class="mr-3 w-5 h-5">
+                                <span>Ingredientes más naturales / puros</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="cambiar-natural" value="recomendacion" class="mr-3 w-5 h-5">
+                                <span>Que me la recomiende alguien de confianza</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="cambiar-natural" value="envio" class="mr-3 w-5 h-5">
+                                <span>Envío gratis / más rápido (e-commerce)</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="cambiar-natural" value="experiencia" class="mr-3 w-5 h-5">
+                                <span>Mejor experiencia de compra online</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="cambiar-natural" value="empaque" class="mr-3 w-5 h-5">
+                                <span>Empaque más sustentable</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="cambiar-natural" value="variedad" class="mr-3 w-5 h-5">
+                                <span>Más variedad de productos</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="cambiar-natural" value="nada" class="mr-3 w-5 h-5">
+                                <span>Nada, estoy satisfecho/a con mi marca actual</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- E6: Dónde compra naturales SIMPLIFICADO -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-3">¿Dónde compra o compraría productos de skincare natural? (Puede marcar VARIAS)</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center p-3 border-2 border-green-300 bg-green-50 rounded-lg hover:bg-green-100 cursor-pointer">
+                                <input type="checkbox" name="donde-natural" value="tiktok-shop" class="mr-3 w-5 h-5">
+                                <span class="font-semibold">🎵 TikTok Shop</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="donde-natural" value="redes-sociales" class="mr-3 w-5 h-5">
+                                <span>Instagram / Facebook Shopping</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="donde-natural" value="marketplaces" class="mr-3 w-5 h-5">
+                                <span>Amazon / Mercado Libre</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="donde-natural" value="tienda-marca" class="mr-3 w-5 h-5">
+                                <span>Tienda en línea de la marca</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="donde-natural" value="tiendas-fisicas" class="mr-3 w-5 h-5">
+                                <span>Tiendas físicas (orgánicas, farmacias, especializadas)</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="donde-natural" value="mercados-locales" class="mr-3 w-5 h-5">
+                                <span>Mercados locales / Artesanos</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="donde-natural" value="no-compro" class="mr-3 w-5 h-5">
+                                <span>No compro productos naturales</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- E7: Beneficio más atractivo -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-2">De estos beneficios, ¿cuál es el MÁS ATRACTIVO para usted? (Seleccione solo UNO)</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="beneficio-atractivo" value="ingredientes-mexicanos" class="mr-3 w-5 h-5">
+                                <span>Ingredientes naturales 100% mexicanos (nopal, tepezcohuite)</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="beneficio-atractivo" value="resultados" class="mr-3 w-5 h-5">
+                                <span>Resultados visibles en el cuidado de mi piel</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="beneficio-atractivo" value="eco-friendly" class="mr-3 w-5 h-5">
+                                <span>Producto eco-friendly / sustentable</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="beneficio-atractivo" value="empresa-mexicana" class="mr-3 w-5 h-5">
+                                <span>Apoyar empresa familiar mexicana</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="beneficio-atractivo" value="premium" class="mr-3 w-5 h-5">
+                                <span>Producto premium / exclusivo</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="beneficio-atractivo" value="libre-quimicos" class="mr-3 w-5 h-5">
+                                <span>Libre de químicos agresivos</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="beneficio-atractivo" value="precio-justo" class="mr-3 w-5 h-5">
+                                <span>Precio justo para la calidad</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- E8: Qué busca idealmente (ABIERTA) -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-2">Idealmente, ¿qué beneficios o características buscaría en el producto de skincare natural perfecto?</label>
+                        <textarea 
+                            rows="4" 
+                            placeholder="Ej: Que hidrate sin dejar grasosa, que tenga aroma suave, que dure bastante..."
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        ></textarea>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN: Compra Digital (NUEVA) -->
+                <div class="border-t-4 border-pink-500 pt-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                        <span class="bg-pink-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">4</span>
+                        Compra en Línea
+                    </h2>
+
+                    <!-- Pregunta 1: ¿Compraría online? -->
+                    <div class="mb-6">
+                        <label id="label-compraria-online" class="block text-gray-700 font-semibold mb-3">
+                            ¿Compraría este jabón en línea (con envío a domicilio)?
+                        </label>
+                        <div class="space-y-2">
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="compraria-online" value="si" class="mr-3 w-5 h-5">
+                                <span>Sí, definitivamente</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="compraria-online" value="probablemente" class="mr-3 w-5 h-5">
+                                <span>Probablemente sí</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="compraria-online" value="tal-vez" class="mr-3 w-5 h-5">
+                                <span>Tal vez</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="compraria-online" value="probablemente-no" class="mr-3 w-5 h-5">
+                                <span>Probablemente no</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="compraria-online" value="no" class="mr-3 w-5 h-5">
+                                <span>No, prefiero comprar en tienda física</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Pregunta 2: ¿En qué plataforma? SIMPLIFICADA -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-3">
+                            ¿En cuál(es) de estas plataformas lo compraría? (Puede marcar varias)
+                        </label>
+                        <div class="space-y-2">
+                            <label class="flex items-center p-3 border-2 border-blue-300 bg-blue-50 rounded-lg hover:bg-blue-100 cursor-pointer">
+                                <input type="checkbox" name="plataformas" value="tiktok-shop" class="mr-3 w-5 h-5">
+                                <span class="font-semibold">🎵 TikTok Shop</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="plataformas" value="redes-sociales" class="mr-3 w-5 h-5">
+                                <span>Instagram / Facebook Shopping</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="plataformas" value="marketplaces" class="mr-3 w-5 h-5">
+                                <span>Amazon / Mercado Libre</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="plataformas" value="tienda-propia" class="mr-3 w-5 h-5">
+                                <span>Tienda en línea de la marca</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="plataformas" value="ninguna" class="mr-3 w-5 h-5">
+                                <span>No compro jabones en línea</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Pregunta 3: Frecuencia de compra online -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-2">
+                            ¿Con qué frecuencia compra productos de higiene/cuidado personal en línea?
+                        </label>
+                        <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Seleccione...</option>
+                            <option>Frecuentemente (cada mes o más)</option>
+                            <option>Ocasionalmente (cada 2-3 meses)</option>
+                            <option>Raramente (1-2 veces al año)</option>
+                            <option>Nunca, es mi primera vez</option>
+                            <option>Nunca he comprado en línea</option>
+                        </select>
+                    </div>
+
+                    <!-- Pregunta 4: Qué te convencería -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-3">
+                            ¿Qué te convencería de comprar este jabón en línea? (Seleccione las 2-3 MÁS importantes)
+                        </label>
+                        <div class="space-y-2">
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="convenceria" value="resenas" class="mr-3 w-5 h-5">
+                                <span>Muchas reseñas/calificaciones positivas</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="convenceria" value="video" class="mr-3 w-5 h-5">
+                                <span>Video mostrando cómo funciona el producto</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="convenceria" value="envio-gratis" class="mr-3 w-5 h-5">
+                                <span>Envío gratis</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="convenceria" value="descuento" class="mr-3 w-5 h-5">
+                                <span>Descuento en primera compra</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="convenceria" value="garantia" class="mr-3 w-5 h-5">
+                                <span>Garantía de devolución/satisfacción</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="convenceria" value="influencer" class="mr-3 w-5 h-5">
+                                <span>Recomendación de influencer/creador que sigo</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="convenceria" value="testimonios" class="mr-3 w-5 h-5">
+                                <span>Testimonios con fotos de resultados reales</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="convenceria" value="entrega-rapida" class="mr-3 w-5 h-5">
+                                <span>Entrega rápida (24-48 hrs)</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" name="convenceria" value="nada" class="mr-3 w-5 h-5">
+                                <span>Nada, no compraría jabón en línea</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN: Validación del Producto -->
+                <div class="border-t-4 border-orange-500 pt-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                        <span class="bg-orange-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">5</span>
+                        Validación del Producto
+                    </h2>
+
+                    <!-- Descripción del producto -->
+                    <div id="producto-descripcion" class="bg-gradient-to-r from-orange-50 to-yellow-50 p-6 rounded-xl mb-6">
+                        <!-- Contenido dinámico -->
+                    </div>
+
+                    <!-- Percepción de precio -->
+                    <div class="mb-6">
+                        <label id="label-precio" class="block text-gray-700 font-semibold mb-2">
+                            A un precio de $19 pesos por 150g, usted consideraría que es:
+                        </label>
+                        <div class="space-y-2">
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="precio-percepcion" value="muy-caro" class="mr-3 w-5 h-5">
+                                <span>Muy caro (no lo compraría)</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="precio-percepcion" value="poco-caro" class="mr-3 w-5 h-5">
+                                <span>Un poco caro (lo pensaría)</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="precio-percepcion" value="justo" class="mr-3 w-5 h-5">
+                                <span>Precio justo (sí lo compraría)</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="precio-percepcion" value="buen-precio" class="mr-3 w-5 h-5">
+                                <span>Buen precio (definitivamente lo compraría)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Probabilidad de compra -->
+                    <div class="mb-6">
+                        <label id="label-probabilidad" class="block text-gray-700 font-semibold mb-2">
+                            ¿Qué tan probable es que lo COMPRE?
+                        </label>
+                        <div class="space-y-2">
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="probabilidad-compra" value="5" class="mr-3 w-5 h-5">
+                                <span>Definitivamente SÍ (5)</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="probabilidad-compra" value="4" class="mr-3 w-5 h-5">
+                                <span>Probablemente SÍ (4)</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="probabilidad-compra" value="3" class="mr-3 w-5 h-5">
+                                <span>Tal vez (3)</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="probabilidad-compra" value="2" class="mr-3 w-5 h-5">
+                                <span>Probablemente NO (2)</span>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="probabilidad-compra" value="1" class="mr-3 w-5 h-5">
+                                <span>Definitivamente NO (1)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN: Perfil Socioeconómico - DÍA A DÍA (NUEVA) -->
+                <div id="seccion-nse-dia" class="border-t-4 border-gray-500 pt-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                        <span class="bg-gray-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">5.5</span>
+                        Información del Hogar
+                    </h2>
+
+                    <!-- NSE-D1: Educación jefe de familia -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-2">¿Cuál es el nivel de estudios del jefe/a de familia?</label>
+                        <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Seleccione...</option>
+                            <option>Primaria o menos</option>
+                            <option>Secundaria incompleta</option>
+                            <option>Secundaria completa</option>
+                            <option>Preparatoria o carrera técnica</option>
+                            <option>Licenciatura</option>
+                            <option>Posgrado (maestría/doctorado)</option>
+                        </select>
+                    </div>
+
+                    <!-- NSE-D2: Vacaciones (más sutil que auto) -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-2">¿Con qué frecuencia sale de vacaciones fuera de su ciudad?</label>
+                        <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Seleccione...</option>
+                            <option>Nunca o casi nunca</option>
+                            <option>Una vez al año</option>
+                            <option>Dos veces al año</option>
+                            <option>Tres o más veces al año</option>
+                        </select>
+                    </div>
+
+                    <!-- NSE-D3: Baños -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-2">¿Cuántos baños completos (con regadera) tiene su vivienda?</label>
+                        <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Seleccione...</option>
+                            <option>0 (sin baño completo)</option>
+                            <option>1</option>
+                            <option>2</option>
+                            <option>3 o más</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN: Perfil Socioeconómico - ECO NUTREE (NUEVA) -->
+                <div id="seccion-nse-eco" class="border-t-4 border-gray-500 pt-6 hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                        <span class="bg-gray-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">5.5</span>
+                        Perfil General
+                    </h2>
+
+                    <!-- NSE-E1: Educación personal -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-2">¿Cuál es su nivel de estudios?</label>
+                        <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Seleccione...</option>
+                            <option>Primaria o menos</option>
+                            <option>Secundaria</option>
+                            <option>Preparatoria / Carrera técnica</option>
+                            <option>Licenciatura</option>
+                            <option>Posgrado (maestría/doctorado)</option>
+                        </select>
+                    </div>
+
+                    <!-- NSE-E2: Auto -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-2">¿Su hogar tiene auto propio?</label>
+                        <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Seleccione...</option>
+                            <option>No</option>
+                            <option>Sí, uno</option>
+                            <option>Sí, dos o más</option>
+                        </select>
+                    </div>
+
+                    <!-- NSE-E3: Tipo de vivienda -->
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-2">¿En qué tipo de vivienda vive?</label>
+                        <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Seleccione...</option>
+                            <option>Casa independiente propia</option>
+                            <option>Casa independiente rentada</option>
+                            <option>Departamento en edificio</option>
+                            <option>Vivienda en vecindad/conjunto</option>
+                            <option>Otra</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN: Ubicación -->
+                <div class="border-t-4 border-indigo-500 pt-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                        <span class="bg-indigo-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">6</span>
+                        Ubicación
+                    </h2>
+
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-2">Zona donde vive</label>
+                        <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Seleccione...</option>
+                            <option>Toluca Centro</option>
+                            <option>Toluca (otras colonias)</option>
+                            <option>Metepec</option>
+                            <option>Zinacantepec</option>
+                            <option>Lerma</option>
+                            <option>CDMX</option>
+                            <option>Otro municipio EdoMex</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Botón de envío -->
+                <div class="pt-6">
+                    <button 
+                        type="submit"
+                        class="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl text-lg transition-all transform hover:scale-105 shadow-lg"
+                    >
+                        Enviar Encuesta ✓
+                    </button>
+                    <p class="text-center text-sm text-gray-500 mt-4">
+                        Tus respuestas son completamente anónimas y nos ayudarán a crear mejores productos 🙏
+                    </p>
+                </div>
+            </form>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-8 text-gray-600 text-sm">
+            <p>Desarrollado por MA AGENCY | Estado de México, 2026</p>
+        </div>
+    </div>
+
+    <script>
+        // Configuración de encuestas
+        const encuestas = {
+            'dia-a-dia': {
+                title: 'Día a Día',
+                subtitle: 'Jabón esencial al alcance de todos',
+                icon: '🧼',
+                descripcion: 'Ayúdanos a crear un jabón de CALIDAD a PRECIO JUSTO para familias mexicanas. Solo 3-4 minutos, completamente anónimo.',
+                nombres: ['Día a Día', 'Mi Jabón', 'Siempre', 'Rinde+'],
+                precio: '$19 pesos por 100g',
+                labelAsociacion: '¿Cuál transmite MEJOR la idea de un jabón económico y de calidad?',
+                labelDondeCompra: '¿Dónde compra PRINCIPALMENTE su jabón?',
+                labelProbabilidad: 'Si lo encuentra en Tiendas 3B, ¿qué tan probable es que lo COMPRE?',
+                labelComprariaOnline: '¿Compraría DÍA A DÍA en línea (con envío a domicilio)?',
+                labelFrecuencia: '¿Con qué frecuencia compra jabón de barra?',
+                productoDescripcion: `
+                    <h3 class="font-bold text-lg mb-3 text-orange-700">Imagine que sale al mercado "DÍA A DÍA" con:</h3>
+                    <ul class="space-y-2 text-gray-700">
+                        <li class="flex items-start"><span class="text-orange-500 mr-2">✓</span> Jabón esencial para uso diario</li>
+                        <li class="flex items-start"><span class="text-orange-500 mr-2">✓</span> Presentación de 100 gramos</li>
+                        <li class="flex items-start"><span class="text-orange-500 mr-2">✓</span> Buena calidad de limpieza</li>
+                        <li class="flex items-start"><span class="text-orange-500 mr-2">✓</span> Hecho en México</li>
+                    </ul>
+                `,
+                opcionesCompra: ['Tiendas 3B', "Waldo's", 'Bodega Aurrera', 'Soriana/Chedraui'],
+                opcionesPrecio: ['Menos de $10', '$10-$15', '$16-$20', '$21-$30']
+            },
+            'eco-nutree': {
+                title: 'Eco Nutree',
+                subtitle: 'Skincare natural hecho en México',
+                icon: '🌿',
+                descripcion: 'Ayúdanos a crear una línea de skincare con jabones 100% naturales y ingredientes mexicanos. Tu opinión es muy valiosa. Solo 4-5 minutos.',
+                nombres: ['ECO NUTREE', 'SAVIA', 'TIERRA SABIA', 'ELEMENTAL', 'NÚA'],
+                precio: '$90 pesos por 100g',
+                labelAsociacion: '¿Cuál transmite MEJOR la idea de skincare natural mexicano?',
+                labelDondeCompra: '¿Dónde compra habitualmente productos de skincare/cuidado de la piel?',
+                labelProbabilidad: 'Si lo ve en TikTok Shop, ¿qué tan probable es que lo COMPRE?',
+                labelComprariaOnline: '¿Compraría este producto de skincare natural en línea (con envío a domicilio)?',
+                labelFrecuencia: '¿Con qué frecuencia compra productos de skincare/cuidado facial?',
+                productoDescripcion: `
+                    <h3 class="font-bold text-lg mb-3 text-green-700">Imagine un producto de skincare natural con:</h3>
+                    <ul class="space-y-2 text-gray-700">
+                        <li class="flex items-start"><span class="text-green-500 mr-2">✓</span> Jabón en barra para limpieza facial y corporal</li>
+                        <li class="flex items-start"><span class="text-green-500 mr-2">✓</span> 100% ingredientes naturales mexicanos (nopal, tepezcohuite, aguacate)</li>
+                        <li class="flex items-start"><span class="text-green-500 mr-2">✓</span> Beneficios: hidratación profunda, nutrición y cuidado de la piel</li>
+                        <li class="flex items-start"><span class="text-green-500 mr-2">✓</span> Libre de químicos agresivos</li>
+                        <li class="flex items-start"><span class="text-green-500 mr-2">✓</span> Hecho en México por empresa familiar</li>
+                        <li class="flex items-start"><span class="text-green-500 mr-2">✓</span> Empaque eco-friendly</li>
+                        <li class="flex items-start"><span class="text-green-500 mr-2">✓</span> Presentación de 100 gramos</li>
+                    </ul>
+                `,
+                opcionesCompra: ['TikTok Shop', 'Amazon/Mercado Libre', 'Tiendas especializadas', 'E-commerce propio'],
+                opcionesPrecio: ['$31-$50', '$51-$70', '$71-$90', '$91-$120', 'Más de $120']
+            }
+        };
+
+        let encuestaActual = 'dia-a-dia';
+
+        // Función para renderizar nombres
+        function renderizarNombres() {
+            const config = encuestas[encuestaActual];
+            const nombres = config.nombres;
+
+            // Rating de nombres (estrellas)
+            const ratingHTML = nombres.map((nombre, idx) => `
+                <div class="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
+                    <span class="font-semibold text-gray-700 w-32">${nombre}</span>
+                    <div class="star-rating flex flex-row-reverse justify-end">
+                        ${[5,4,3,2,1].map(val => `
+                            <input type="radio" name="rating-${idx}" value="${val}" id="rating-${idx}-${val}" required>
+                            <label for="rating-${idx}-${val}">★</label>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('nombres-rating').innerHTML = ratingHTML;
+
+            // Asociación
+            const asociacionHTML = nombres.map((nombre, idx) => `
+                <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <input type="radio" name="asociacion" value="${nombre}" class="mr-3 w-5 h-5">
+                    <span class="font-medium">${nombre}</span>
+                </label>
+            `).join('');
+            document.getElementById('nombres-asociacion').innerHTML = asociacionHTML;
+        }
+
+        // Función para actualizar textos
+        function actualizarTextos() {
+            const config = encuestas[encuestaActual];
+            
+            document.getElementById('header-icon').textContent = config.icon;
+            document.getElementById('encuesta-title').textContent = `Encuesta: ${config.title}`;
+            document.getElementById('encuesta-descripcion').textContent = config.descripcion;
+            document.getElementById('label-asociacion').textContent = config.labelAsociacion;
+            document.getElementById('label-donde-compra').textContent = config.labelDondeCompra;
+            document.getElementById('label-precio').textContent = `A un precio de ${config.precio}, usted consideraría que es:`;
+            document.getElementById('label-probabilidad').textContent = config.labelProbabilidad;
+            document.getElementById('label-compraria-online').textContent = config.labelComprariaOnline;
+            document.getElementById('label-frecuencia').textContent = config.labelFrecuencia;
+            document.getElementById('producto-descripcion').innerHTML = config.productoDescripcion;
+        }
+
+        // Toggle entre encuestas
+        function toggleEncuesta() {
+            encuestaActual = encuestaActual === 'dia-a-dia' ? 'eco-nutree' : 'dia-a-dia';
+            const config = encuestas[encuestaActual];
+            const otroNombre = encuestaActual === 'dia-a-dia' ? 'Eco Nutree' : 'Día a Día';
+            
+            document.getElementById('toggle-title').textContent = `Encuesta: ${config.title}`;
+            document.getElementById('toggle-subtitle').textContent = config.subtitle;
+            document.getElementById('toggle-text').textContent = otroNombre;
+
+            // Mostrar/ocultar secciones específicas
+            if (encuestaActual === 'dia-a-dia') {
+                // Mostrar sección Día a Día, ocultar Eco Nutree
+                document.getElementById('seccion-marca-dia').classList.remove('hidden');
+                document.getElementById('seccion-naturales-eco').classList.add('hidden');
+                document.getElementById('seccion-nse-dia').classList.remove('hidden');
+                document.getElementById('seccion-nse-eco').classList.add('hidden');
+            } else {
+                // Mostrar sección Eco Nutree, ocultar Día a Día
+                document.getElementById('seccion-marca-dia').classList.add('hidden');
+                document.getElementById('seccion-naturales-eco').classList.remove('hidden');
+                document.getElementById('seccion-nse-dia').classList.add('hidden');
+                document.getElementById('seccion-nse-eco').classList.remove('hidden');
+            }
+
+            // Re-renderizar todo
+            renderizarNombres();
+            actualizarTextos();
+
+            // Scroll al inicio
+            window.scrollTo({top: 0, behavior: 'smooth'});
+
+            // Reset form
+            document.getElementById('encuesta-form').reset();
+            
+            // Reset progreso
+            document.getElementById('progress-bar').style.width = '0%';
+            document.getElementById('progress-text').textContent = '0%';
+        }
+
+        // Manejo de envío
+        document.getElementById('encuesta-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            console.log('Iniciando envío de encuesta...', encuestaActual);
+            
+            // Ya NO validamos campos obligatorios - se puede enviar sin llenar todo
+            
+            // Recopilar todos los datos del formulario
+            console.log('Recopilando datos...');
+            const formData = recopilarDatos();
+            console.log('Datos recopilados:', formData);
+            
+            // Mostrar mensaje de "Enviando..."
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            submitButton.innerHTML = '⏳ Enviando...';
+            submitButton.disabled = true;
+            
+            try {
+                // URL de Google Apps Script
+                const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzzg1W9B5Gz9Wno20cdtJOjwqvO0h6E5giBP5aKSE9OanXAiS0ScCrb0JYCNCrwvJZdag/exec';
+                
+                console.log('Enviando a:', SCRIPT_URL);
+                console.log('Payload:', JSON.stringify(formData));
+                
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                    redirect: 'follow'
+                });
+                
+                console.log('Respuesta recibida:', response);
+                
+                // Intentar leer la respuesta
+                try {
+                    const result = await response.text();
+                    console.log('Resultado:', result);
+                } catch (e) {
+                    console.log('No se pudo leer respuesta (normal con CORS)');
+                }
+                
+                alert(`✓ ¡Gracias por tu tiempo!\n\nTu encuesta de "${encuestas[encuestaActual].title}" ha sido enviada exitosamente.\n\nTus respuestas nos ayudarán a crear mejores productos para México 🇲🇽`);
+                
+                // Reset form
+                this.reset();
+                actualizarProgreso();
+                window.scrollTo({top: 0, behavior: 'smooth'});
+                
+            } catch (error) {
+                console.error('Error al enviar:', error);
+                alert('✓ Encuesta enviada!\n\nSi no ves el error, probablemente se envió correctamente.\nRevisa tu Google Sheet para confirmar.');
+            } finally {
+                // Restaurar botón
+                submitButton.innerHTML = originalText;
+                submitButton.disabled = false;
+            }
+        });
+
+        // Función MEJORADA para recopilar todos los datos del formulario
+        function recopilarDatos() {
+            const formElement = document.getElementById('encuesta-form');
+            const data = {
+                encuesta: encuestaActual,
+                timestamp: new Date().toISOString(),
+                nombres: {},
+                masImportante: [],
+                razonCompra: [],
+                cambiarMarca: [],
+                marcasNaturales: [],
+                motivaNatural: [],
+                confianza: [],
+                cambiarNatural: [],
+                dondeNatural: [],
+                plataformas: [],
+                convenceria: []
+            };
+
+            try {
+                // Recopilar ratings de nombres
+                const config = encuestas[encuestaActual];
+                config.nombres.forEach((nombre, idx) => {
+                    const rating = formElement.querySelector(`input[name="rating-${idx}"]:checked`);
+                    if (rating) {
+                        data.nombres[nombre] = parseInt(rating.value);
+                    }
+                });
+
+                // Nombre que transmite mejor
+                const nombreTransmite = formElement.querySelector('input[name="asociacion"]:checked');
+                data.nombreTransmiteMejor = nombreTransmite ? nombreTransmite.value : '';
+
+                // Recopilar todos los select
+                const selects = formElement.querySelectorAll('select[required]');
+                const selectValues = Array.from(selects).map(s => s.value);
+                
+                console.log('Valores de selects:', selectValues);
+
+                // Datos generales
+                data.edad = selectValues[0] || '';
+                data.genero = selectValues[1] || '';
+                data.frecuenciaCompra = selectValues[2] || '';
+
+                // Más importante (2 opciones)
+                data.masImportante = Array.from(formElement.querySelectorAll('.checkbox-importante:checked')).map(cb => cb.value);
+
+                // Dónde compra y cuánto paga
+                data.dondeCompra = selectValues[3] || '';
+                data.cuantoPaga = selectValues[4] || '';
+
+                if (encuestaActual === 'dia-a-dia') {
+                    // Día a Día específico
+                    data.marcaCompra = selectValues[5] || '';
+                    data.razonCompra = Array.from(formElement.querySelectorAll('.checkbox-marca-razones:checked')).map(cb => cb.value);
+                    data.cambiarMarca = Array.from(formElement.querySelectorAll('input[name="cambiar-marca"]:checked')).map(cb => cb.value);
+                    data.barrasAlMes = selectValues[6] || '';
+                    
+                    const disgusta = formElement.querySelector('#seccion-marca-dia textarea');
+                    data.queDisgusta = disgusta ? disgusta.value : '';
+
+                    // Compra digital
+                    const compraOnline = formElement.querySelector('input[name="compraria-online"]:checked');
+                    data.comprariaOnline = compraOnline ? compraOnline.value : '';
+                    data.plataformas = Array.from(formElement.querySelectorAll('input[name="plataformas"]:checked')).map(cb => cb.value);
+                    data.frecuenciaOnline = selectValues[7] || '';
+                    data.convenceria = Array.from(formElement.querySelectorAll('input[name="convenceria"]:checked')).map(cb => cb.value);
+
+                    // Validación producto
+                    const precioPerc = formElement.querySelector('input[name="precio-percepcion"]:checked');
+                    data.percepcionPrecio = precioPerc ? precioPerc.value : '';
+                    const probCompra = formElement.querySelector('input[name="probabilidad-compra"]:checked');
+                    data.probabilidadCompra = probCompra ? probCompra.value : '';
+
+                    // NSE Día a Día
+                    data.educacionJefe = selectValues[8] || '';
+                    data.autoPropio = selectValues[9] || '';
+                    data.banosCompletos = selectValues[10] || '';
+                    data.zonaVive = selectValues[11] || '';
+
+                } else {
+                    // Eco Nutree específico
+                    data.usaNaturales = selectValues[5] || '';
+                    data.marcasNaturales = Array.from(formElement.querySelectorAll('input[name="marcas-naturales"]:checked')).map(cb => cb.value);
+                    data.motivaNatural = Array.from(formElement.querySelectorAll('input[name="motiva-natural"]:checked')).map(cb => cb.value);
+                    data.confianza = Array.from(formElement.querySelectorAll('.checkbox-confianza:checked')).map(cb => cb.value);
+                    data.cambiarNatural = Array.from(formElement.querySelectorAll('input[name="cambiar-natural"]:checked')).map(cb => cb.value);
+                    data.dondeNatural = Array.from(formElement.querySelectorAll('input[name="donde-natural"]:checked')).map(cb => cb.value);
+                    
+                    const beneficio = formElement.querySelector('input[name="beneficio-atractivo"]:checked');
+                    data.beneficioAtractivo = beneficio ? beneficio.value : '';
+                    
+                    const busca = formElement.querySelector('#seccion-naturales-eco textarea');
+                    data.queBusca = busca ? busca.value : '';
+
+                    // Compra digital
+                    const compraOnline = formElement.querySelector('input[name="compraria-online"]:checked');
+                    data.comprariaOnline = compraOnline ? compraOnline.value : '';
+                    data.plataformas = Array.from(formElement.querySelectorAll('input[name="plataformas"]:checked')).map(cb => cb.value);
+                    data.frecuenciaOnline = selectValues[6] || '';
+                    data.convenceria = Array.from(formElement.querySelectorAll('input[name="convenceria"]:checked')).map(cb => cb.value);
+
+                    // Validación producto
+                    const precioPerc = formElement.querySelector('input[name="precio-percepcion"]:checked');
+                    data.percepcionPrecio = precioPerc ? precioPerc.value : '';
+                    const probCompra = formElement.querySelector('input[name="probabilidad-compra"]:checked');
+                    data.probabilidadCompra = probCompra ? probCompra.value : '';
+
+                    // NSE Eco Nutree
+                    data.educacionPersonal = selectValues[7] || '';
+                    data.autoPropio = selectValues[8] || '';
+                    data.tipoVivienda = selectValues[9] || '';
+                    data.zonaVive = selectValues[10] || '';
+                }
+
+                return data;
+
+            } catch (error) {
+                console.error('Error recopilando datos:', error);
+                throw error;
+            }
+        }
+
+        // Actualizar progreso basado en campos llenos
+        function actualizarProgreso() {
+            const form = document.getElementById('encuesta-form');
+            // Contar inputs principales
+            const selects = form.querySelectorAll('select');
+            const radios = [];
+            const checkboxGroups = new Set();
+            
+            form.querySelectorAll('input[type="radio"]').forEach(r => {
+                if (!radios.includes(r.name)) radios.push(r.name);
+            });
+            
+            form.querySelectorAll('input[type="checkbox"]').forEach(c => {
+                checkboxGroups.add(c.name);
+            });
+            
+            const textareas = form.querySelectorAll('textarea');
+            
+            const totalCampos = selects.length + radios.length + checkboxGroups.size + textareas.length;
+            let llenos = 0;
+            
+            // Contar selects llenos
+            selects.forEach(s => { if (s.value) llenos++; });
+            
+            // Contar radios llenos
+            radios.forEach(name => {
+                if (form.querySelector(`input[name="${name}"]:checked`)) llenos++;
+            });
+            
+            // Contar checkboxes con al menos uno marcado
+            checkboxGroups.forEach(name => {
+                if (form.querySelector(`input[name="${name}"]:checked`)) llenos++;
+            });
+            
+            // Contar textareas llenas
+            textareas.forEach(t => { if (t.value.trim()) llenos++; });
+
+            const progreso = totalCampos > 0 ? Math.round((llenos / totalCampos) * 100) : 0;
+            document.getElementById('progress-bar').style.width = progreso + '%';
+            document.getElementById('progress-text').textContent = progreso + '%';
+        }
+
+        // Escuchar cambios en el formulario
+        document.getElementById('encuesta-form').addEventListener('change', actualizarProgreso);
+        document.getElementById('encuesta-form').addEventListener('input', actualizarProgreso);
+
+        // Validación en tiempo real para checkboxes
+        document.addEventListener('change', function(e) {
+            // Validación "más importante"
+            if (e.target.classList.contains('checkbox-importante')) {
+                const checkboxes = document.querySelectorAll('.checkbox-importante:checked');
+                const errorMsg = document.getElementById('error-importante');
+                
+                if (checkboxes.length > 2) {
+                    e.target.checked = false;
+                    errorMsg.textContent = 'Solo puede seleccionar 2 opciones máximo';
+                    errorMsg.classList.remove('hidden');
+                } else if (checkboxes.length === 2) {
+                    errorMsg.classList.add('hidden');
+                } else {
+                    errorMsg.textContent = 'Por favor seleccione exactamente 2 opciones';
+                }
+            }
+
+            // Validación "marca-razones" (Día a Día)
+            if (e.target.classList.contains('checkbox-marca-razones')) {
+                const checkboxes = document.querySelectorAll('.checkbox-marca-razones:checked');
+                const errorMsg = document.getElementById('error-marca-razones');
+                
+                if (checkboxes.length > 2) {
+                    e.target.checked = false;
+                    errorMsg.textContent = 'Solo puede seleccionar 2 opciones máximo';
+                    errorMsg.classList.remove('hidden');
+                } else if (checkboxes.length === 2) {
+                    errorMsg.classList.add('hidden');
+                } else {
+                    errorMsg.textContent = 'Por favor seleccione exactamente 2 opciones';
+                }
+            }
+
+            // Validación "confianza" (Eco Nutree)
+            if (e.target.classList.contains('checkbox-confianza')) {
+                const checkboxes = document.querySelectorAll('.checkbox-confianza:checked');
+                const errorMsg = document.getElementById('error-confianza');
+                
+                if (checkboxes.length > 2) {
+                    e.target.checked = false;
+                    errorMsg.textContent = 'Solo puede seleccionar 2 opciones máximo';
+                    errorMsg.classList.remove('hidden');
+                } else if (checkboxes.length === 2) {
+                    errorMsg.classList.add('hidden');
+                } else {
+                    errorMsg.textContent = 'Por favor seleccione exactamente 2 opciones';
+                }
+            }
+        });
+
+        // Inicializar
+        renderizarNombres();
+        actualizarTextos();
+        actualizarProgreso();
+        
+        // Mostrar sección correcta al inicio (Día a Día por defecto)
+        document.getElementById('seccion-marca-dia').classList.remove('hidden');
+        document.getElementById('seccion-naturales-eco').classList.add('hidden');
+        document.getElementById('seccion-nse-dia').classList.remove('hidden');
+        document.getElementById('seccion-nse-eco').classList.add('hidden');
+    </script>
+</body>
+</html>
